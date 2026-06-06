@@ -2,7 +2,48 @@
 # to commit it to your repository.
 #
 # You may wish to alter this file to override the set of languages analyzed,
-# or to provide custom queries or build logic.
+# or to provide customname: Android CI Build
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease
+        env:
+          # إذا عندك signing config أضف المتغيرات هنا
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: pharmacy-app-apk
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 30 queries or build logic.
 #
 # ******** NOTE ********
 # We have attempted to detect the languages in your repository. Please check
