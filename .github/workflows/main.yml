@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -28,6 +30,23 @@ jobs:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
           cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      - name: Validate Gradle Wrapper
+        run: |
+          if [ ! -f "./gradlew" ]; then
+            echo "::error::gradlew not found!"
+            exit 1
+          fi
+          if [ ! -f "./gradle/wrapper/gradle-wrapper.jar" ]; then
+            echo "::error::gradle-wrapper.jar not found!"
+            exit 1
+          fi
+          echo "Gradle wrapper OK ✓"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -45,10 +64,15 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
 
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_FILE_BASE64 }}" | base64 -d > app/keystore.jks
+          echo "Keystore decoded successfully"
+
       - name: Build Release APK
         run: ./gradlew assembleRelease --stacktrace
         env:
-          KEYSTORE_FILE: ${{ secrets.KEYSTORE_FILE }}
+          KEYSTORE_FILE: app/keystore.jks
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
