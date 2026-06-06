@@ -1,4 +1,0 @@
-curl -L -o gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v8.7.0/gradle/wrapper/gradle-wrapper.jar
-git add gradle/wrapper/gradle-wrapper.jar
-git commit -m "Add gradle-wrapper.jar"
-git push
