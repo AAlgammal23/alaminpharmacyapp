@@ -1,0 +1,23 @@
+# Android Studio / IntelliJ
+*.iml
+/.idea
+.DS_Store
+
+# Gradle
+/.gradle/        # تجاهل مجلد الكاش فقط
+/build/          # تجاهل ملفات البناء
+app/build/
+
+# Native build
+/captures
+.externalNativeBuild
+.cxx
+
+# Local config
+/local.properties
+keystore.properties
+
+# Output files
+*.apk
+*.aab
+*.keystore
