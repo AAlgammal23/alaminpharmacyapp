@@ -44,12 +44,17 @@ jobs:
 
       - name: Validate Gradle Wrapper
         run: |
-          if [ ! -f "./gradlew" ]; then
+          echo "Checking gradle wrapper files..."
+          if [ ! -f "gradlew" ]; then
             echo "::error::gradlew not found!"
             exit 1
           fi
-          if [ ! -f "./gradle/wrapper/gradle-wrapper.jar" ]; then
+          if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
             echo "::error::gradle-wrapper.jar not found!"
+            exit 1
+          fi
+          if [ ! -f "gradle/wrapper/gradle-wrapper.properties" ]; then
+            echo "::error::gradle-wrapper.properties not found!"
             exit 1
           fi
           echo "Gradle wrapper OK ✓"
