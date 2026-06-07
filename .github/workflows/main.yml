@@ -36,6 +36,12 @@ jobs:
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
+      # 👇 خطوة Debug إضافية
+      - name: Debug Gradle Wrapper Path
+        run: |
+          echo "Listing gradle directory..."
+          ls -R gradle
+
       - name: Validate Gradle Wrapper
         run: |
           if [ ! -f "./gradlew" ]; then
@@ -51,12 +57,10 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # تشغيل Linter
       - name: Run Android Lint
         run: ./gradlew lint
         continue-on-error: true
 
-      # تشغيل الاختبارات
       - name: Run Unit Tests
         run: ./gradlew test --stacktrace
         continue-on-error: true
@@ -77,7 +81,6 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      # تحميل الـ Artifacts
       - name: Upload Debug APK
         if: success()
         uses: actions/upload-artifact@v4
@@ -94,7 +97,6 @@ jobs:
           path: app/build/outputs/apk/release/**/*.apk
           retention-days: 30
 
-      # تحميل تقارير الاختبارات
       - name: Upload Test Reports
         if: always()
         uses: actions/upload-artifact@v4
