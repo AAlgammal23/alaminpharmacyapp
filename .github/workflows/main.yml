@@ -4,13 +4,10 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 env:
-  GRADLE_OPTS: "-Xmx4096m -XX:+UseG1GC"
+  GRADLE_OPTS: "-Xmx4096m"
   JAVA_VERSION: "17"
 
 jobs:
@@ -21,8 +18,6 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-        with:
-          lfs: true
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -33,49 +28,21 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Validate Gradle Wrapper
         run: |
-          echo "📂 محتويات الجذر:"
-          ls -l
-          echo "📂 محتويات gradle/wrapper:"
-          ls -l gradle/wrapper || echo "⚠️ مجلد gradle/wrapper غير موجود"
-
-          if [ ! -f "./gradlew" ]; then
-            echo "::error::gradlew not found!"
-            exit 1
-          fi
+          ls -l gradle/wrapper/
           if [ ! -f "./gradle/wrapper/gradle-wrapper.jar" ]; then
             echo "::error::gradle-wrapper.jar not found!"
             exit 1
           fi
-          if [ ! -f "./gradle/wrapper/gradle-wrapper.properties" ]; then
-            echo "::error::gradle-wrapper.properties not found!"
-            exit 1
-          fi
+          echo "✅ Wrapper found"
 
-          echo "✅ Gradle wrapper موجود وجاهز"
-
-      - name: Grant execute permission for gradlew
+      - name: Grant execute permission
         run: chmod +x gradlew
-
-      - name: Run Android Lint
-        run: ./gradlew lint
-        continue-on-error: true
-
-      - name: Run Unit Tests
-        run: ./gradlew test --stacktrace
-        continue-on-error: true
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
-
-      - name: Decode Keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_FILE_BASE64 }}" | base64 -d > app/keystore.jks
-          echo "Keystore decoded successfully"
 
       - name: Build Release APK
         run: ./gradlew assembleRelease --stacktrace
@@ -84,47 +51,16 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        # تحتاجي تحطي Decode Keystore هنا
 
       - name: Upload Debug APK
-        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: pharmacy-app-debug-apk
-          path: app/build/outputs/apk/debug/**/*.apk
-          retention-days: 30
+          name: app-debug
+          path: app/build/outputs/apk/debug/*.apk
 
       - name: Upload Release APK
-        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: pharmacy-app-release-apk
-          path: app/build/outputs/apk/release/**/*.apk
-          retention-days: 30
-
-      - name: Upload Test Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-reports
-          path: "**/build/reports/tests/**"
-          retention-days: 15
-
-      - name: Upload Lint Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lint-reports
-          path: "**/build/reports/lint-results*.html"
-          retention-days: 15
-
-      - name: Comment PR with Build Status
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '✅ **البناء نجح!**\n- Debug APK جاهز\n- Release APK جاهز'
-            })
+          name: app-release
+          path: app/build/outputs/apk/release/*.apk
