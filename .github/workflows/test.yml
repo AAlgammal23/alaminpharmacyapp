@@ -29,8 +29,14 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: List project structure (للتشخيص)
+        run: |
+          ls -la
+          ls -la app/
+          cat app/build.gradle.kts || cat app/build.gradle || echo "No build.gradle found"
+
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew :app:assembleDebug --stacktrace
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
