@@ -34,15 +34,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Setup Gradle Wrapper
-        run: |
-          mkdir -p gradle/wrapper
-          curl -L -o gradle/wrapper/gradle-wrapper.jar \
-            "https://raw.githubusercontent.com/gradle/gradle/v8.7.0/gradle/wrapper/gradle-wrapper.jar"
-          chmod +x gradlew
-          echo "✅ Wrapper ready"
-          ls -l gradle/wrapper/
-
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
@@ -50,10 +41,12 @@ jobs:
         run: ./gradlew assembleDebug --stacktrace
 
       - name: Decode Keystore
+        if: ${{ secrets.KEYSTORE_FILE_BASE64 != '' }}
         run: |
           echo "${{ secrets.KEYSTORE_FILE_BASE64 }}" | base64 -d > app/keystore.jks
 
       - name: Build Release APK
+        if: ${{ secrets.KEYSTORE_FILE_BASE64 != '' }}
         run: ./gradlew assembleRelease --stacktrace
         env:
           KEYSTORE_FILE: app/keystore.jks
@@ -68,6 +61,7 @@ jobs:
           path: app/build/outputs/apk/debug/**/*.apk
 
       - name: Upload Release APK
+        if: ${{ secrets.KEYSTORE_FILE_BASE64 != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: pharmacy-app-release-apk
